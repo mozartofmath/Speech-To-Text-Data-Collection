@@ -8,12 +8,9 @@ class TestConsumer(unittest.TestCase):
         """
         
         transcripts = open('./data/Transcripts.txt', 'r', encoding = "utf-8")
-        okay = len(transcripts.readlines()) == len(os.listdir('./data/audio'))
+        result = len(transcripts.readlines()) == len(os.listdir('./data/audio'))
+        transcripts.close()
         self.assertEqual(result, True)
-
-    
-
-
 
 if __name__ == '__main__':
     unittest.main()
