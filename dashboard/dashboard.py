@@ -22,7 +22,7 @@ def main():
     st.title("Amharic Speech To Text Data Collection")
 
     st.sidebar.write("Navigation")
-    app_mode = st.sidebar.selectbox("Choose Here", ("Home", "Test Model"))
+    app_mode = st.sidebar.selectbox("Choose Here", ("Home", "Record Audio"))
     if app_mode == 'Home':
         st.write('''
         ## Introduction
@@ -35,11 +35,11 @@ def main():
         Our responsibility was to build a deep learning model that is capable of transcribing a speech to text in the 
         Amharic language. The model we produce will be accurate and is robust against background noise.
         
-        In order to make our model more accurate, we need more data. We would like to thank you for participating.''')
+        In order to make our model more accurate, we need more data. We would like to thank you for participating. Please navigate to the ''')
 
         logging.info("Homepage loaded")
 
-    elif app_mode == "Test Model":
+    elif app_mode == "Record Audio":
         def record(duration, fs):
             sd.default.samplerate = fs
             sd.default.channels = 1
@@ -50,6 +50,7 @@ def main():
         st.subheader('Record a 10 second audio and perform prediction')
         if st.button(f"Start Recording"):
             myrecording = record(10, sample_rate)
+            logging.info("recording complete")
             st.write("recording complete")
             #audios, predictions, transcripts = perform_predictions('./data/pred/')
             st.subheader('Your Audio')
@@ -57,10 +58,13 @@ def main():
             wavio.write('audio.wav', myrecording, sample_rate, sampwidth=1)
         st.write("Click the send button to send the recorded audio")
         if st.button('Send'):
-            producer = KafkaProducer(bootstrap_servers=['172.31.32.175:9092'],
+            producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
                                         value_serializer=lambda x: 
                                         dumps(x).encode('utf-8'))
-            myrecording, _ = librosa.load('audio.wav')
+            try:
+                myrecording, _ = librosa.load('audio.wav')
+            except FileNotFoundError:
+                logging.error("audio file not found")
             producer.send('audiostore', value={"transcript": "ababab", "sample_rate": sample_rate, "audio": list(map(lambda x:float(x), myrecording))})
             st.write("The audio has been sent. Thanks for your cooperation!!!")
             logging.info("Audio Sent")
